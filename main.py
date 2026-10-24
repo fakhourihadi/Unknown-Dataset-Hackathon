@@ -38,7 +38,13 @@ def prepare_frames(train, test):
     drop = [c for c in train if train[c].nunique(dropna=False) <= 1]
     drop += [c for i, c in enumerate(train.columns) if any(train[c].equals(train.iloc[:, j]) for j in range(i))]
     # IDs generally generalize poorly; avoid high-cardinality near-unique strings.
-    drop += [c for c in train.select_dtypes(exclude='number') if len(train) > 30 and train[c].nunique(dropna=True) / max(len(train), 1) > .98]
+    drop += [c for c in train.select_dtypes(exclude='number') if len(train) > 30 and train[c].nunique(dropna=True) / max(len(train), 1) > .98] 
+    # Remove identifier columns that should not affect predictions
+    drop += [
+        c for c in train.columns
+        if str(c).lower().replace("_", "").replace(" ", "") in
+        {"id", "customerid", "userid", "recordid", "rowid"}
+    ]
     drop = list(dict.fromkeys(drop))
     train, test = train.drop(columns=drop), test.drop(columns=drop)
     if train.shape[1] == 0:
